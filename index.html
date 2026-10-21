@@ -1,4 +1,4 @@
-<title>拾學筆記</title>
+<title>知集筆記</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* 版面概念：左側書籤欄＋右側內容；紙張底、墨綠主色，承襲「拾史」的沉靜檔案感 */
@@ -354,7 +354,7 @@ function render(){
 }
 function renderApp(){
   if(!state.ready){
-    $app.innerHTML = `<div class="main"><p class="eyebrow">YOUR PERSONAL STUDY ARCHIVE</p><h2 class="serif">拾學筆記</h2><p style="color:var(--ink-soft)">載入中…</p></div>`;
+    $app.innerHTML = `<div class="main"><p class="eyebrow">YOUR PERSONAL STUDY ARCHIVE</p><h2 class="serif">知集筆記</h2><p style="color:var(--ink-soft)">載入中…</p></div>`;
     return;
   }
   const subjects = [...state.subjects.entries()].sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0));
@@ -370,8 +370,8 @@ function renderApp(){
   $app.innerHTML = `
     <aside class="side">
       <div class="brand">
-        <div class="mark serif">拾</div>
-        <div><h1 class="serif">拾學</h1><small>NOTEBOOK</small></div>
+        <div class="mark serif">知</div>
+        <div><h1 class="serif">知集</h1><small>NOTEBOOK</small></div>
       </div>
       <p class="tagline">把學過的，寫成自己的知識。</p>
       <p class="side-label">我的科目</p>
@@ -384,7 +384,7 @@ function renderApp(){
 function renderNoSubject(){
   return `
     <p class="eyebrow">YOUR PERSONAL STUDY ARCHIVE</p>
-    <h2 class="serif" style="font-size:30px;margin:0 0 20px">拾學筆記</h2>
+    <h2 class="serif" style="font-size:30px;margin:0 0 20px">知集筆記</h2>
     <div class="empty">
       <p style="margin-top:0">還沒有任何科目。</p>
       <p>按左側的 <b>＋ 新增科目</b> 開始：<br>
