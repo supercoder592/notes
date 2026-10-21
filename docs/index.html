@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>拾學筆記</title>
+</head>
+<body>
+<style>
+/* 版面概念：左側書籤欄＋右側內容；紙張底、墨綠主色，承襲「拾史」的沉靜檔案感 */
+:root{
+  --bg:#f3f1ea;            /* 紙張底 */
+  --panel:#ece9df;         /* 側欄 */
+  --card:#faf8f2;          /* 卡片 */
+  --ink:#2c3330;           /* 主文字 */
+  --ink-soft:#6c7470;      /* 次要文字 */
+  --accent:#2f5d50;        /* 墨綠 */
+  --accent-ink:#f4f6f4;    /* 墨綠上的文字 */
+  --line:#b9b4a4;          /* 連接線 */
+  --chip:#e3e0d4;          /* 標籤底 */
+  --danger:#a04434;
+  --shadow:0 10px 30px rgba(44,51,48,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1d201e; --panel:#232724; --card:#262b28; --ink:#e4e4dc; --ink-soft:#9aa39d;
+    --accent:#7fb3a2; --accent-ink:#15211d; --line:#4c524d; --chip:#323833;
+    --danger:#d98a7b; --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1d201e; --panel:#232724; --card:#262b28; --ink:#e4e4dc; --ink-soft:#9aa39d;
+  --accent:#7fb3a2; --accent-ink:#15211d; --line:#4c524d; --chip:#323833;
+  --danger:#d98a7b; --shadow:0 10px 30px rgba(0,0,0,.4); color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  font-size:15px; line-height:1.65;
+}
+.serif{font-family:"Noto Serif TC","Songti TC",serif}
+
+.app{display:flex; min-height:100%}
+
+/* ───── 側欄 ───── */
+.side{
+  width:230px; flex:0 0 230px; background:var(--panel);
+  border-right:1px solid var(--line);
+  padding-block:22px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:14px;
+  display:flex; flex-direction:column; gap:6px;
+}
+.brand{display:flex; align-items:center; gap:10px; margin-bottom:4px}
+.brand .mark{
+  width:40px;height:40px;border-radius:9px;background:var(--accent);color:var(--accent-ink);
+  display:flex;align-items:center;justify-content:center;font-size:21px;flex:0 0 auto;
+}
+.brand h1{font-size:21px;margin:0;letter-spacing:.12em}
+.brand small{display:block;color:var(--ink-soft);letter-spacing:.3em;font-size:10px}
+.tagline{color:var(--ink-soft);font-size:12.5px;margin:0 0 14px}
+.side-label{font-size:12px;color:var(--ink-soft);letter-spacing:.15em;margin:10px 0 2px}
+.subj-btn{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  background:none;border:none;border-radius:9px;padding:9px 10px;cursor:pointer;
+  color:var(--ink);font-size:15px;font-family:inherit;
+}
+.subj-btn:hover{background:var(--chip)}
+.subj-btn.on{background:var(--card);box-shadow:var(--shadow)}
+.subj-btn .ico{flex:0 0 auto;color:var(--accent)}
+.subj-btn .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subj-btn .ct{color:var(--ink-soft);font-size:12.5px;font-variant-numeric:tabular-nums}
+.add-subj{
+  margin-top:8px;display:flex;align-items:center;gap:8px;justify-content:center;
+  border:1.5px dashed var(--line);background:none;border-radius:9px;padding:9px;
+  color:var(--ink-soft);cursor:pointer;font-family:inherit;font-size:14px;
+}
+.add-subj:hover{color:var(--accent);border-color:var(--accent)}
+.side .foot{margin-top:auto;padding-top:16px;font-size:12px;color:var(--ink-soft)}
+
+/* ───── 主區 ───── */
+.main{
+  flex:1;min-width:0;
+  padding-block:26px 60px;
+  padding-left:max(26px, env(safe-area-inset-left,0px));
+  padding-right:max(26px, env(safe-area-inset-right,0px));
+}
+.eyebrow{letter-spacing:.3em;font-size:11px;color:var(--ink-soft);margin:0 0 6px}
+.subj-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.subj-head h2{font-size:30px;margin:0;flex:1;min-width:0}
+.subj-head .tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.search{
+  background:var(--card);border:1px solid var(--line);border-radius:9px;
+  padding:8px 12px;color:var(--ink);font-family:inherit;font-size:14px;width:190px;max-width:100%;
+}
+.btn{
+  border:none;border-radius:9px;padding:9px 16px;cursor:pointer;font-family:inherit;
+  font-size:14px;background:var(--chip);color:var(--ink);
+}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:none;border:1px solid var(--line)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.subj-sub{color:var(--ink-soft);font-size:13.5px;margin:4px 0 26px}
+.subj-menu{display:flex;gap:10px;margin:2px 0 0}
+.linklike{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:12.5px;padding:2px;font-family:inherit;text-decoration:underline;text-underline-offset:3px}
+.linklike:hover{color:var(--accent)}
+
+.empty{
+  border:1.5px dashed var(--line);border-radius:14px;padding:40px 24px;text-align:center;
+  color:var(--ink-soft);max-width:560px;
+}
+.empty b{color:var(--ink);font-weight:600}
+.notice{
+  background:var(--chip);border-radius:9px;padding:8px 14px;font-size:13px;
+  color:var(--ink-soft);margin:0 0 18px;max-width:560px;
+}
+
+/* ───── 時間軸（歷史型） ───── */
+.tl{position:relative;max-width:640px}
+.ev{display:flex;gap:0;cursor:pointer}
+.ev-year{
+  flex:0 0 92px;text-align:right;padding:14px 14px 0 0;color:var(--accent);
+  font-size:13.5px;font-variant-numeric:tabular-nums;font-weight:600;
+}
+.ev-rail{flex:0 0 20px;position:relative}
+.ev-rail::before{content:"";position:absolute;left:9px;top:0;bottom:0;width:2px;background:var(--line)}
+.ev:first-child .ev-rail::before{top:20px}
+.ev:last-child .ev-rail::before{bottom:auto;height:20px}
+.ev-rail::after{
+  content:"";position:absolute;left:4px;top:17px;width:8px;height:8px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--bg);
+}
+.ev-body{flex:1;min-width:0;padding:8px 0 22px 14px}
+.ev-card{
+  background:var(--card);border:1px solid var(--line);border-radius:11px;
+  padding:11px 15px;box-shadow:var(--shadow);transition:transform .12s;
+}
+.ev:hover .ev-card{transform:translateX(3px)}
+.ev-title{font-weight:600}
+.ev-note-preview{color:var(--ink-soft);font-size:13px;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{background:var(--chip);border-radius:20px;padding:1px 10px;font-size:12px;color:var(--ink-soft)}
+
+/* ───── 樹狀筆記 ───── */
+.tree-wrap{overflow-x:auto;padding-bottom:20px}
+.tree-units{display:flex;flex-direction:column;gap:26px;min-width:min-content}
+.tnode{display:flex;align-items:flex-start}
+.tcard{
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:8px 14px;min-height:40px;box-sizing:border-box;display:flex;align-items:center;
+  max-width:260px;min-width:72px;cursor:pointer;box-shadow:var(--shadow);
+  word-break:break-word;
+}
+.tcard:hover{border-color:var(--accent)}
+.tcard.unit{
+  border:1.5px solid var(--accent);border-left-width:5px;font-weight:600;
+}
+.tstub{flex:0 0 20px;height:2px;background:var(--line);margin-top:19px}
+.tbranch{display:flex;flex-direction:column;min-width:0}
+.tchild{position:relative;padding-left:20px;padding-block:6px}
+.tchild::before{
+  content:"";position:absolute;left:0;top:0;width:14px;height:25px;
+  border-left:2px solid var(--line);border-bottom:2px solid var(--line);
+  border-bottom-left-radius:9px;
+}
+.tchild:first-child::before{top:14px;height:11px}
+.tchild::after{content:"";position:absolute;left:0;top:25px;bottom:-6px;border-left:2px solid var(--line)}
+.tchild:last-child::after{display:none}
+.port{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--accent);
+  background:var(--bg);cursor:pointer;margin-top:11px;display:block;padding:0;
+  transition:background .12s, transform .12s;
+}
+.port:hover{background:var(--accent);transform:scale(1.15)}
+.composer{display:flex;gap:6px;align-items:center;margin-top:3px}
+.composer input{
+  background:var(--card);border:1.5px solid var(--accent);border-radius:8px;
+  padding:7px 10px;font-family:inherit;font-size:14px;color:var(--ink);width:180px;
+}
+.composer .btn{padding:7px 11px}
+
+/* ───── 彈窗 ───── */
+.overlay{
+  position:fixed;inset:0;background:rgba(30,33,31,.45);z-index:40;
+  display:flex;align-items:center;justify-content:center;
+  padding-block:24px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+}
+.modal{
+  background:var(--bg);border-radius:16px;box-shadow:var(--shadow);
+  width:560px;max-width:100%;max-height:min(86vh, 100%);overflow-y:auto;
+  padding:26px 28px;
+}
+.modal .eyebrow{margin-bottom:2px}
+.modal h3{margin:0 0 18px;font-size:22px}
+.m-head{display:flex;align-items:flex-start}
+.m-head .grow{flex:1;min-width:0}
+.x{background:none;border:1px solid var(--line);border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--ink-soft);font-size:15px;flex:0 0 auto}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:13.5px;margin-bottom:5px;color:var(--ink)}
+.field input[type=text],.field input[type=number],.field textarea,.field select{
+  width:100%;box-sizing:border-box;background:var(--card);border:1px solid var(--line);
+  border-radius:9px;padding:9px 12px;font-family:inherit;font-size:14.5px;color:var(--ink);
+}
+.field textarea{min-height:110px;resize:vertical}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.radio-row{display:flex;gap:18px;background:var(--chip);border-radius:9px;padding:10px 14px;flex-wrap:wrap}
+.radio-row label{display:flex;gap:7px;align-items:center;font-size:14px;cursor:pointer;margin:0}
+.two-col{display:flex;gap:12px;flex-wrap:wrap}
+.two-col .field{flex:1;min-width:140px}
+.m-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;flex-wrap:wrap}
+.m-foot .left{margin-right:auto}
+.detail-meta{color:var(--accent);font-size:13.5px;margin-bottom:12px}
+.detail-note{white-space:pre-wrap}
+
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--bg);border-radius:9px;padding:9px 18px;
+  font-size:14px;z-index:60;box-shadow:var(--shadow);
+}
+
+/* ───── 手機版 ───── */
+.menu-toggle{display:none}
+@media (max-width:760px){
+  .app{flex-direction:column}
+  .side{
+    width:auto;flex:none;border-right:none;border-bottom:1px solid var(--line);
+    padding-block:14px 10px;
+    padding-right:max(16px, env(safe-area-inset-right,0px));
+  }
+  .side .foot{display:none}
+  .tagline{display:none}
+  .side-label{display:none}
+  .subj-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+  .subj-row .subj-btn{white-space:nowrap;width:auto}
+  .main{padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));padding-block:20px 48px}
+  .ev-year{flex-basis:64px;font-size:12.5px}
+  .subj-head h2{font-size:24px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+}
+.port:focus-visible,.btn:focus-visible,.subj-btn:focus-visible,.tcard:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@600;700&display=swap">
+
+<div class="app" id="app"></div>
+<div id="modal-root"></div>
+<div id="toast-root"></div>
+
+<script>
+"use strict";
+/* ───────── 狀態 ───────── */
+const state = {
+  subjects: new Map(),   // id -> {name, kind:"timeline"|"tree", createdAt}
+  items: new Map(),      // id -> event 或 node
+  currentId: null,
+  search: "",
+  composerFor: null,     // 樹狀：正在輸入的接口（父節點 id 或 "root:<subjectId>"）
+  modal: null,           // {type, ...}
+  ready: false,
+  local: false,          // 未登入時退回此裝置儲存
+};
+let db = null;
+const LS_KEY = "shixue-notes-v1";
+
+const $app = document.getElementById("app");
+const $modalRoot = document.getElementById("modal-root");
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random().toString(16).slice(2));
+
+/* ───────── 儲存層：資料庫優先，未登入退回本機 ───────── */
+async function initStore(){
+  try{ db = await window.claude?.use("db"); }catch(e){ db = null; }
+  if(db){
+    db.collection("subjects").onSnapshot(snap=>{
+      state.subjects = new Map(snap.docs.map(d=>[d.id, d.data()]));
+      afterData();
+    }, err=>{ console.error(err); fallbackLocal(); });
+    db.collection("items").onSnapshot(snap=>{
+      state.items = new Map(snap.docs.map(d=>[d.id, d.data()]));
+      afterData();
+    }, err=>console.error(err));
+  }else{
+    fallbackLocal();
+  }
+}
+function fallbackLocal(){
+  if(state.local) return;
+  state.local = true; db = null;
+  try{
+    const raw = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    state.subjects = new Map(Object.entries(raw.subjects || {}));
+    state.items = new Map(Object.entries(raw.items || {}));
+  }catch(e){}
+  afterData();
+}
+function persistLocal(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      subjects: Object.fromEntries(state.subjects),
+      items: Object.fromEntries(state.items),
+    }));
+  }catch(e){}
+}
+async function saveDoc(coll, id, data){
+  if(db){
+    try{ await db.collection(coll).doc(id).set(data); }
+    catch(e){ toast("儲存失敗：" + (e && e.code === "quota_exceeded" ? "空間已滿，請刪除舊筆記" : "請稍後再試")); throw e; }
+  }else{
+    (coll === "subjects" ? state.subjects : state.items).set(id, data);
+    persistLocal(); render();
+  }
+}
+async function deleteDoc(coll, id){
+  if(db){
+    try{ await db.collection(coll).doc(id).delete(); }
+    catch(e){ toast("刪除失敗，請稍後再試"); throw e; }
+  }else{
+    (coll === "subjects" ? state.subjects : state.items).delete(id);
+    persistLocal(); render();
+  }
+}
+function afterData(){
+  state.ready = true;
+  if(!state.currentId || !state.subjects.has(state.currentId)){
+    const first = [...state.subjects.entries()].sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0))[0];
+    state.currentId = first ? first[0] : null;
+  }
+  render();
+}
+
+/* ───────── 小工具 ───────── */
+function toast(msg){
+  const root = document.getElementById("toast-root");
+  root.innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>{ root.innerHTML = ""; }, 2600);
+}
+function fmtYear(y){
+  if(y === null || y === undefined || y === "") return "";
+  y = Number(y);
+  return y < 0 ? "前 " + (-y) : String(y);
+}
+function subjectItems(sid){
+  return [...state.items.entries()].filter(([,it])=>it.subjectId === sid);
+}
+function subjectCount(sid){ return subjectItems(sid).length; }
+
+/* ───────── 畫面 ───────── */
+function render(){
+  renderApp();
+  renderModal();
+}
+function renderApp(){
+  if(!state.ready){
+    $app.innerHTML = `<div class="main"><p class="eyebrow">YOUR PERSONAL STUDY ARCHIVE</p><h2 class="serif">拾學筆記</h2><p style="color:var(--ink-soft)">載入中…</p></div>`;
+    return;
+  }
+  const subjects = [...state.subjects.entries()].sort((a,b)=>(a[1].createdAt||0)-(b[1].createdAt||0));
+  const sideItems = subjects.map(([id,s])=>`
+    <button class="subj-btn ${id===state.currentId?"on":""}" data-act="pick" data-id="${id}">
+      <span class="ico">${s.kind==="timeline"?"🕮":"🗂"}</span>
+      <span class="nm">${esc(s.name)}</span>
+      <span class="ct">${subjectCount(id)}</span>
+    </button>`).join("");
+
+  const cur = state.currentId ? state.subjects.get(state.currentId) : null;
+
+  $app.innerHTML = `
+    <aside class="side">
+      <div class="brand">
+        <div class="mark serif">拾</div>
+        <div><h1 class="serif">拾學</h1><small>NOTEBOOK</small></div>
+      </div>
+      <p class="tagline">把學過的，寫成自己的知識。</p>
+      <p class="side-label">我的科目</p>
+      <div class="subj-row">${sideItems || ""}</div>
+      <button class="add-subj" data-act="add-subject">＋ 新增科目</button>
+      <div class="foot">${state.local ? "資料儲存在這台裝置的瀏覽器" : "已同步・所有裝置共用"}</div>
+    </aside>
+    <main class="main">${cur ? renderSubject(state.currentId, cur) : renderNoSubject()}</main>`;
+}
+function renderNoSubject(){
+  return `
+    <p class="eyebrow">YOUR PERSONAL STUDY ARCHIVE</p>
+    <h2 class="serif" style="font-size:30px;margin:0 0 20px">拾學筆記</h2>
+    <div class="empty">
+      <p style="margin-top:0">還沒有任何科目。</p>
+      <p>按左側的 <b>＋ 新增科目</b> 開始：<br>
+      「時間軸」適合歷史這類照年代整理的科目，<br>
+      「樹狀筆記」適合用單元一層層往外長的科目。</p>
+    </div>`;
+}
+function renderSubject(sid, s){
+  const head = `
+    <p class="eyebrow">YOUR PERSONAL STUDY ARCHIVE</p>
+    <div class="subj-head">
+      <h2 class="serif">${esc(s.name)}</h2>
+      <div class="tools">
+        ${s.kind==="timeline" ? `<input class="search" type="search" id="search-box" placeholder="搜尋事件、筆記或標籤" value="${esc(state.search)}">` : ""}
+        <button class="btn primary" data-act="${s.kind==="timeline"?"add-event":"add-unit"}">＋ ${s.kind==="timeline"?"新增事件":"新增單元"}</button>
+      </div>
+    </div>
+    <p class="subj-sub">${s.kind==="timeline" ? "在時間的脈絡中，尋找每段故事的連結。" : "從單元出發，點圈圈把筆記一層層接下去。"}
+      <span class="subj-menu">
+        <button class="linklike" data-act="rename-subject">重新命名</button>
+        <button class="linklike" data-act="delete-subject">刪除科目</button>
+      </span>
+    </p>`;
+  return head + (s.kind === "timeline" ? renderTimeline(sid) : renderTree(sid));
+}
+
+/* ── 時間軸 ── */
+function renderTimeline(sid){
+  let evs = subjectItems(sid).map(([id,it])=>({id,...it}));
+  const q = state.search.trim().toLowerCase();
+  if(q){
+    evs = evs.filter(e =>
+      (e.title||"").toLowerCase().includes(q) ||
+      (e.note||"").toLowerCase().includes(q) ||
+      (e.tags||[]).some(t=>t.toLowerCase().includes(q)));
+  }
+  evs.sort((a,b)=>(a.yearStart - b.yearStart) || ((a.createdAt||0)-(b.createdAt||0)));
+  if(!evs.length){
+    return `<div class="empty">${q ? "找不到符合「<b>"+esc(state.search)+"</b>」的事件。" :
+      "這一科還沒有事件。<br>按 <b>＋ 新增事件</b>，記下第一段歷史：名稱、年份（西元前用負數，例如 -221）、筆記與 hashtag。"}</div>`;
+  }
+  const rows = evs.map(e=>{
+    const yr = e.yearEnd !== null && e.yearEnd !== undefined
+      ? fmtYear(e.yearStart) + "–" + fmtYear(e.yearEnd)
+      : fmtYear(e.yearStart);
+    const tags = (e.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join("");
+    return `
+    <div class="ev" data-act="open-event" data-id="${e.id}" role="button" tabindex="0">
+      <div class="ev-year">${esc(yr)}</div>
+      <div class="ev-rail"></div>
+      <div class="ev-body"><div class="ev-card">
+        <div class="ev-title">${esc(e.title)}</div>
+        ${e.note ? `<div class="ev-note-preview">${esc(e.note)}</div>` : ""}
+        ${tags ? `<div class="tags">${tags}</div>` : ""}
+      </div></div>
+    </div>`;
+  }).join("");
+  return `<div class="tl">${rows}</div>`;
+}
+
+/* ── 樹狀筆記 ── */
+function renderTree(sid){
+  const nodes = subjectItems(sid).map(([id,it])=>({id,...it}));
+  const byParent = new Map();
+  nodes.forEach(n=>{
+    const p = n.parentId || "";
+    if(!byParent.has(p)) byParent.set(p, []);
+    byParent.get(p).push(n);
+  });
+  byParent.forEach(list=>list.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)));
+  const roots = byParent.get("") || [];
+  if(!roots.length && state.composerFor !== "root:"+sid){
+    return `<div class="empty">這一科還沒有單元。<br>按 <b>＋ 新增單元</b> 建立第一個單元；每個單元和筆記後面都有一個 <b>○ 圈圈接口</b>，點它就能把筆記接下去。</div>`;
+  }
+  const renderNode = (n, isUnit) => {
+    const kids = byParent.get(n.id) || [];
+    const kidHtml = kids.map(k=>`<div class="tchild">${renderNode(k,false)}</div>`).join("");
+    const port = state.composerFor === n.id
+      ? composerHTML(n.id)
+      : `<button class="port" data-act="open-composer" data-id="${esc(n.id)}" aria-label="在「${esc(n.text)}」後新增筆記" title="新增筆記"></button>`;
+    return `
+    <div class="tnode">
+      <div class="tcard ${isUnit?"unit":""}" data-act="edit-node" data-id="${n.id}" role="button" tabindex="0">${esc(n.text)}</div>
+      <div class="tstub"></div>
+      <div class="tbranch">
+        ${kidHtml}
+        <div class="tchild">${port}</div>
+      </div>
+    </div>`;
+  };
+  const rootComposer = state.composerFor === "root:"+sid
+    ? `<div>${composerHTML("root:"+sid, "單元名稱")}</div>` : "";
+  return `<div class="tree-wrap"><div class="tree-units">
+    ${roots.map(r=>renderNode(r,true)).join("")}
+    ${rootComposer}
+  </div></div>`;
+}
+function composerHTML(key, ph){
+  return `
+  <form class="composer" data-act="composer" data-key="${esc(key)}">
+    <input type="text" id="composer-input" placeholder="${esc(ph||"筆記內容")}" autocomplete="off">
+    <button class="btn primary" type="submit">加入</button>
+    <button class="btn ghost" type="button" data-act="close-composer">取消</button>
+  </form>`;
+}
+
+/* ───────── 彈窗 ───────── */
+function renderModal(){
+  const m = state.modal;
+  if(!m){ $modalRoot.innerHTML = ""; return; }
+  let body = "";
+  if(m.type === "subject-form"){
+    body = `
+      <p class="eyebrow">A NEW SUBJECT</p>
+      <div class="m-head"><div class="grow"><h3 class="serif">${m.id?"重新命名科目":"新增科目"}</h3></div>
+      <button class="x" data-act="close-modal" aria-label="關閉">✕</button></div>
+      <form id="modal-form">
+        <div class="field"><label for="f-name">科目名稱</label>
+          <input type="text" id="f-name" value="${esc(m.name||"")}" placeholder="例如：歷史、生物、公民" required></div>
+        ${m.id ? "" : `
+        <div class="field"><label>筆記型態</label>
+          <div class="radio-row">
+            <label><input type="radio" name="f-kind" value="tree" checked> 樹狀筆記（單元＋圈圈接口）</label>
+            <label><input type="radio" name="f-kind" value="timeline"> 時間軸（歷史型，照年代）</label>
+          </div>
+          <p class="hint">建立後型態就固定了；兩種型態的科目可以並存。</p>
+        </div>`}
+        <div class="m-foot">
+          <button class="btn ghost" type="button" data-act="close-modal">取消</button>
+          <button class="btn primary" type="submit">${m.id?"儲存":"建立科目"}</button>
+        </div>
+      </form>`;
+  }
+  if(m.type === "subject-delete"){
+    const s = state.subjects.get(m.id);
+    body = `
+      <div class="m-head"><div class="grow"><h3 class="serif">刪除「${esc(s?.name)}」？</h3></div>
+      <button class="x" data-act="close-modal" aria-label="關閉">✕</button></div>
+      <p>這個科目和裡面的 ${subjectCount(m.id)} 則內容都會一起刪除，而且無法復原。</p>
+      <div class="m-foot">
+        <button class="btn ghost" data-act="close-modal">取消</button>
+        <button class="btn danger" data-act="confirm-delete-subject" data-id="${m.id}">確定刪除</button>
+      </div>`;
+  }
+  if(m.type === "event-form"){
+    const e = m.id ? state.items.get(m.id) : null;
+    const isRange = m.range ?? (e ? e.yearEnd !== null && e.yearEnd !== undefined : false);
+    body = `
+      <p class="eyebrow">A MOMENT IN HISTORY</p>
+      <div class="m-head"><div class="grow"><h3 class="serif">${m.id?"編輯歷史事件":"新增歷史事件"}</h3></div>
+      <button class="x" data-act="close-modal" aria-label="關閉">✕</button></div>
+      <form id="modal-form">
+        <div class="field"><label for="f-title">事件名稱</label>
+          <input type="text" id="f-title" value="${esc(m.title ?? e?.title ?? "")}" placeholder="為這段歷史取個名字" required></div>
+        <div class="field"><label>時間型態</label>
+          <div class="radio-row">
+            <label><input type="radio" name="f-range" value="point" ${isRange?"":"checked"}> 時間點</label>
+            <label><input type="radio" name="f-range" value="range" ${isRange?"checked":""}> 時間段</label>
+          </div></div>
+        <div class="two-col">
+          <div class="field"><label for="f-y1">開始年份</label>
+            <input type="number" id="f-y1" value="${esc(m.y1 ?? e?.yearStart ?? "")}" placeholder="例如：1911" required>
+            <p class="hint">西元前請輸入負數，例如 -221。</p></div>
+          <div class="field" id="f-y2-wrap" ${isRange?"":"hidden"}><label for="f-y2">結束年份</label>
+            <input type="number" id="f-y2" value="${esc(m.y2 ?? e?.yearEnd ?? "")}" placeholder="例如：1945"></div>
+        </div>
+        <div class="field"><label for="f-note">歷史筆記</label>
+          <textarea id="f-note" placeholder="記錄事件的起因、經過，或你的想法…">${esc(m.note ?? e?.note ?? "")}</textarea></div>
+        <div class="field"><label for="f-tags">Hashtag</label>
+          <input type="text" id="f-tags" value="${esc(m.tags ?? (e?.tags||[]).join(" "))}" placeholder="#政治 #文化 #重要轉折">
+          <p class="hint">用空格或逗號分隔，讓故事更容易被找到。</p></div>
+        <div class="m-foot">
+          <button class="btn ghost" type="button" data-act="close-modal">取消</button>
+          <button class="btn primary" type="submit">儲存事件 ↗</button>
+        </div>
+      </form>`;
+  }
+  if(m.type === "event-detail"){
+    const e = state.items.get(m.id);
+    if(!e){ state.modal = null; $modalRoot.innerHTML=""; return; }
+    const s = state.subjects.get(e.subjectId);
+    const yr = e.yearEnd !== null && e.yearEnd !== undefined ? fmtYear(e.yearStart)+" – "+fmtYear(e.yearEnd) : fmtYear(e.yearStart);
+    const tags = (e.tags||[]).map(t=>`<span class="tag">#${esc(t)}</span>`).join("");
+    body = `
+      <div class="m-head"><div class="grow"><h3 class="serif" style="margin-bottom:6px">${esc(e.title)}</h3></div>
+      <button class="x" data-act="close-modal" aria-label="關閉">✕</button></div>
+      <p class="detail-meta">${esc(s?.name||"")} ・ ${esc(yr)}</p>
+      ${e.note ? `<p class="detail-note">${esc(e.note)}</p>` : `<p style="color:var(--ink-soft)">（還沒有筆記）</p>`}
+      ${tags ? `<div class="tags" style="margin-top:14px">${tags}</div>` : ""}
+      <div class="m-foot">
+        <span class="left">${m.confirmDel
+          ? `<button class="btn danger" data-act="confirm-delete-event" data-id="${m.id}">確定刪除？</button>`
+          : `<button class="btn ghost" data-act="ask-delete-event">刪除</button>`}</span>
+        <button class="btn" data-act="edit-event" data-id="${m.id}">編輯</button>
+        <button class="btn primary" data-act="close-modal">關閉</button>
+      </div>`;
+  }
+  if(m.type === "node-edit"){
+    const n = state.items.get(m.id);
+    if(!n){ state.modal = null; $modalRoot.innerHTML=""; return; }
+    const kids = countSubtree(m.id) - 1;
+    body = `
+      <div class="m-head"><div class="grow"><h3 class="serif">${n.parentId ? "編輯筆記" : "編輯單元"}</h3></div>
+      <button class="x" data-act="close-modal" aria-label="關閉">✕</button></div>
+      <form id="modal-form">
+        <div class="field"><label for="f-text">內容</label>
+          <textarea id="f-text" style="min-height:80px" required>${esc(n.text)}</textarea></div>
+        <div class="m-foot">
+          <span class="left">${m.confirmDel
+            ? `<button class="btn danger" type="button" data-act="confirm-delete-node" data-id="${m.id}">確定刪除${kids>0?"（含其下 "+kids+" 則）":""}？</button>`
+            : `<button class="btn ghost" type="button" data-act="ask-delete-node">刪除</button>`}</span>
+          <button class="btn ghost" type="button" data-act="close-modal">取消</button>
+          <button class="btn primary" type="submit">儲存</button>
+        </div>
+      </form>`;
+  }
+  $modalRoot.innerHTML = `<div class="overlay" data-act="overlay"><div class="modal">${body}</div></div>`;
+  const first = $modalRoot.querySelector("input[type=text],textarea");
+  if(first && !m.noFocus){ first.focus(); }
+}
+function countSubtree(id){
+  let n = 1;
+  for(const [kid,it] of state.items){ if(it.parentId === id) n += countSubtree(kid); }
+  return n;
+}
+
+/* ───────── 事件處理 ───────── */
+document.addEventListener("click", async ev=>{
+  const t = ev.target.closest("[data-act]");
+  if(!t) return;
+  const act = t.dataset.act, id = t.dataset.id;
+  if(act === "pick"){ state.currentId = id; state.search=""; state.composerFor=null; render(); }
+  if(act === "add-subject"){ state.modal = {type:"subject-form"}; render(); }
+  if(act === "rename-subject"){ const s=state.subjects.get(state.currentId); state.modal = {type:"subject-form", id:state.currentId, name:s?.name}; render(); }
+  if(act === "delete-subject"){ state.modal = {type:"subject-delete", id:state.currentId}; render(); }
+  if(act === "confirm-delete-subject"){
+    const sid = id;
+    state.modal = null;
+    const doomed = subjectItems(sid).map(([iid])=>iid);
+    await deleteDoc("subjects", sid);
+    for(const iid of doomed) await deleteDoc("items", iid);
+    toast("科目已刪除");
+    if(state.currentId === sid) state.currentId = null;
+    afterData();
+  }
+  if(act === "add-event"){ state.modal = {type:"event-form"}; render(); }
+  if(act === "open-event"){ state.modal = {type:"event-detail", id}; render(); }
+  if(act === "edit-event"){ state.modal = {type:"event-form", id}; render(); }
+  if(act === "ask-delete-event"){ state.modal.confirmDel = true; state.modal.noFocus = true; render(); }
+  if(act === "confirm-delete-event"){
+    state.modal = null;
+    await deleteDoc("items", id);
+    toast("事件已刪除"); render();
+  }
+  if(act === "add-unit"){ state.composerFor = "root:"+state.currentId; render(); focusComposer(); }
+  if(act === "open-composer"){ state.composerFor = id; render(); focusComposer(); }
+  if(act === "close-composer"){ state.composerFor = null; render(); }
+  if(act === "edit-node"){ state.modal = {type:"node-edit", id}; render(); }
+  if(act === "ask-delete-node"){ state.modal.confirmDel = true; state.modal.noFocus = true; render(); }
+  if(act === "confirm-delete-node"){
+    state.modal = null;
+    const all = [...collectSubtree(id)];
+    for(const nid of all) await deleteDoc("items", nid);
+    toast("已刪除"); render();
+  }
+  if(act === "close-modal"){ state.modal = null; render(); }
+  if(act === "overlay" && ev.target === t){ state.modal = null; render(); }
+});
+function* collectSubtree(id){
+  yield id;
+  for(const [kid,it] of state.items){ if(it.parentId === id) yield* collectSubtree(kid); }
+}
+function focusComposer(){
+  const i = document.getElementById("composer-input");
+  if(i) i.focus();
+}
+
+/* 鍵盤開啟卡片 */
+document.addEventListener("keydown", ev=>{
+  if((ev.key === "Enter" || ev.key === " ") && ev.target.matches?.('[role="button"][data-act]')){
+    ev.preventDefault(); ev.target.click();
+  }
+  if(ev.key === "Escape" && state.modal){ state.modal = null; render(); }
+});
+
+/* 表單送出 */
+document.addEventListener("submit", async ev=>{
+  const f = ev.target;
+  ev.preventDefault();
+  /* 樹狀接口 */
+  if(f.matches('[data-act="composer"]')){
+    const key = f.dataset.key;
+    const text = f.querySelector("input").value.trim();
+    if(!text) return;
+    const isRoot = key.startsWith("root:");
+    const data = {
+      subjectId: isRoot ? key.slice(5) : state.items.get(key)?.subjectId,
+      type: "node",
+      parentId: isRoot ? null : key,
+      text,
+      createdAt: Date.now(),
+    };
+    if(!data.subjectId) return;
+    state.composerFor = null;
+    await saveDoc("items", uid(), data);
+    render();
+    return;
+  }
+  if(f.id !== "modal-form" || !state.modal) return;
+  const m = state.modal;
+  if(m.type === "subject-form"){
+    const name = document.getElementById("f-name").value.trim();
+    if(!name) return;
+    if(m.id){
+      const s = {...state.subjects.get(m.id), name};
+      state.modal = null;
+      await saveDoc("subjects", m.id, s);
+    }else{
+      const kind = f.querySelector('[name="f-kind"]:checked')?.value || "tree";
+      const nid = uid();
+      state.modal = null;
+      await saveDoc("subjects", nid, {name, kind, createdAt: Date.now()});
+      state.currentId = nid;
+    }
+    render();
+  }
+  if(m.type === "event-form"){
+    const title = document.getElementById("f-title").value.trim();
+    const y1 = document.getElementById("f-y1").value;
+    if(!title || y1 === "") return;
+    const isRange = f.querySelector('[name="f-range"]:checked')?.value === "range";
+    const y2 = document.getElementById("f-y2").value;
+    const tags = document.getElementById("f-tags").value
+      .split(/[\s,，、]+/).map(t=>t.replace(/^#/,"").trim()).filter(Boolean);
+    const prev = m.id ? state.items.get(m.id) : null;
+    const data = {
+      subjectId: prev?.subjectId || state.currentId,
+      type: "event",
+      title,
+      yearStart: Number(y1),
+      yearEnd: isRange && y2 !== "" ? Number(y2) : null,
+      note: document.getElementById("f-note").value.trim(),
+      tags,
+      createdAt: prev?.createdAt || Date.now(),
+    };
+    state.modal = null;
+    await saveDoc("items", m.id || uid(), data);
+    toast(m.id ? "已更新" : "事件已加入時間軸");
+    render();
+  }
+  if(m.type === "node-edit"){
+    const text = document.getElementById("f-text").value.trim();
+    if(!text) return;
+    const n = {...state.items.get(m.id), text};
+    state.modal = null;
+    await saveDoc("items", m.id, n);
+    render();
+  }
+});
+
+/* 搜尋、時間點/時間段切換 */
+document.addEventListener("input", ev=>{
+  if(ev.target.id === "search-box"){
+    state.search = ev.target.value;
+    const box = ev.target;
+    const pos = box.selectionStart;
+    render();
+    const nb = document.getElementById("search-box");
+    if(nb){ nb.focus(); try{ nb.setSelectionRange(pos,pos); }catch(e){} }
+  }
+});
+document.addEventListener("change", ev=>{
+  if(ev.target.name === "f-range"){
+    const wrap = document.getElementById("f-y2-wrap");
+    if(wrap) wrap.hidden = ev.target.value !== "range";
+  }
+});
+
+render();
+initStore();
+</script>
+</body>
+</html>
