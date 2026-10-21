@@ -275,57 +275,122 @@ const $modalRoot = document.getElementById("modal-root");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now()+"-"+Math.random().toString(16).slice(2));
 
-/* ───────── 儲存層：資料庫優先，未登入退回本機 ───────── */
-async function initStore(){
-  try{ db = await window.claude?.use("db"); }catch(e){ db = null; }
-  if(db){
-    db.collection("subjects").onSnapshot(snap=>{
-      state.subjects = new Map(snap.docs.map(d=>[d.id, d.data()]));
-      afterData();
-    }, err=>{ console.error(err); fallbackLocal(); });
-    db.collection("items").onSnapshot(snap=>{
-      state.items = new Map(snap.docs.map(d=>[d.id, d.data()]));
-      afterData();
-    }, err=>console.error(err));
+/* ───────── 儲存層：GitHub 同步（網址帶金鑰，免登入）＋本機快取 ───────── */
+const GH_API = "https://api.github.com/repos/supercoder592/notes/contents/docs/data.json";
+let ghToken = null, ghSha = null;
+let cloudOk = false, canWrite = false;
+let pushTimer = null, pushing = false, dirty = false;
+
+(function pickToken(){
+  const m = location.hash.match(/t=(github_pat_[A-Za-z0-9_]+|ghp_[A-Za-z0-9]+)/);
+  if(m){
+    ghToken = m[1];
+    try{ localStorage.setItem("zhiji-token", ghToken); }catch(e){}
+    try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+    toast("同步金鑰已存入這台裝置");
   }else{
-    fallbackLocal();
+    try{ ghToken = localStorage.getItem("zhiji-token"); }catch(e){}
   }
+})();
+
+function b64encodeUtf8(s){
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for(let i = 0; i < bytes.length; i += 0x8000){
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
 }
-function fallbackLocal(){
-  if(state.local) return;
-  state.local = true; db = null;
+function b64decodeUtf8(b){
+  const bin = atob(b.replace(/\n/g, ""));
+  const bytes = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+function ghHeaders(json){
+  const h = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"};
+  if(ghToken) h["Authorization"] = "Bearer " + ghToken;
+  if(json) h["Content-Type"] = "application/json";
+  return h;
+}
+function snapshotData(){
+  return {subjects: Object.fromEntries(state.subjects), items: Object.fromEntries(state.items)};
+}
+function persistLocal(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(snapshotData())); }catch(e){}
+}
+function applyData(data){
+  state.subjects = new Map(Object.entries(data.subjects || {}));
+  state.items = new Map(Object.entries(data.items || {}));
+  persistLocal();
+  afterData();
+}
+async function fetchRemote(){
+  const r = await fetch(GH_API + "?ref=main&_=" + Date.now(), {headers: ghHeaders(), cache: "no-store"});
+  if(!r.ok) throw new Error("gh " + r.status);
+  const body = await r.json();
+  return {sha: body.sha, data: JSON.parse(b64decodeUtf8(body.content))};
+}
+async function initStore(){
   try{
     const raw = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
     state.subjects = new Map(Object.entries(raw.subjects || {}));
     state.items = new Map(Object.entries(raw.items || {}));
   }catch(e){}
-  afterData();
-}
-function persistLocal(){
+  state.ready = true; render();
   try{
-    localStorage.setItem(LS_KEY, JSON.stringify({
-      subjects: Object.fromEntries(state.subjects),
-      items: Object.fromEntries(state.items),
-    }));
-  }catch(e){}
+    const remote = await fetchRemote();
+    ghSha = remote.sha; cloudOk = true; canWrite = !!ghToken;
+    applyData(remote.data);
+  }catch(e){ cloudOk = false; afterData(); }
+  // 有金鑰每 20 秒對時一次；唯讀模式放慢到 2 分鐘（避開未登入的流量限制）
+  setInterval(async ()=>{
+    if(!cloudOk || document.visibilityState !== "visible" || dirty || pushing) return;
+    if(!ghToken && (Date.now() % 120000) > 25000) return;
+    try{
+      const remote = await fetchRemote();
+      if(remote.sha !== ghSha){ ghSha = remote.sha; applyData(remote.data); }
+    }catch(e){}
+  }, 20000);
+}
+function schedulePush(){
+  if(!ghToken){ toast("此裝置沒有同步金鑰，變更只存在這台裝置"); return; }
+  dirty = true;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(pushNow, 1500);
+}
+async function pushNow(){
+  if(!ghToken || pushing) return;
+  pushing = true; dirty = false;
+  try{
+    const body = {
+      message: "更新筆記資料",
+      content: b64encodeUtf8(JSON.stringify(snapshotData())),
+      branch: "main",
+    };
+    if(ghSha) body.sha = ghSha;
+    let r = await fetch(GH_API, {method: "PUT", headers: ghHeaders(true), body: JSON.stringify(body)});
+    if(r.status === 409 || r.status === 422){
+      const remote = await fetchRemote();
+      ghSha = remote.sha;
+      body.sha = ghSha;
+      r = await fetch(GH_API, {method: "PUT", headers: ghHeaders(true), body: JSON.stringify(body)});
+    }
+    if(!r.ok) throw new Error("push " + r.status);
+    const res = await r.json();
+    ghSha = res.content.sha;
+    cloudOk = true; canWrite = true;
+  }catch(e){ dirty = true; toast("雲端同步失敗，稍後會自動重試"); }
+  pushing = false;
+  if(dirty){ clearTimeout(pushTimer); pushTimer = setTimeout(pushNow, 10000); }
 }
 async function saveDoc(coll, id, data){
-  if(db){
-    try{ await db.collection(coll).doc(id).set(data); }
-    catch(e){ toast("儲存失敗：" + (e && e.code === "quota_exceeded" ? "空間已滿，請刪除舊筆記" : "請稍後再試")); throw e; }
-  }else{
-    (coll === "subjects" ? state.subjects : state.items).set(id, data);
-    persistLocal(); render();
-  }
+  (coll === "subjects" ? state.subjects : state.items).set(id, data);
+  persistLocal(); schedulePush(); render();
 }
 async function deleteDoc(coll, id){
-  if(db){
-    try{ await db.collection(coll).doc(id).delete(); }
-    catch(e){ toast("刪除失敗，請稍後再試"); throw e; }
-  }else{
-    (coll === "subjects" ? state.subjects : state.items).delete(id);
-    persistLocal(); render();
-  }
+  (coll === "subjects" ? state.subjects : state.items).delete(id);
+  persistLocal(); schedulePush(); render();
 }
 function afterData(){
   state.ready = true;
@@ -383,7 +448,7 @@ function renderApp(){
       <p class="side-label">我的科目</p>
       <div class="subj-row">${sideItems || ""}</div>
       <button class="add-subj" data-act="add-subject">＋ 新增科目</button>
-      <div class="foot">${state.local ? "資料儲存在這台裝置的瀏覽器" : "已同步・所有裝置共用"}</div>
+      <div class="foot">${cloudOk ? (canWrite ? "已同步・免登入（GitHub）" : "唯讀同步中・此裝置未設定金鑰") : "離線模式・資料僅存於此裝置"}</div>
     </aside>
     <main class="main">${cur ? renderSubject(state.currentId, cur) : renderNoSubject()}</main>`;
 }
